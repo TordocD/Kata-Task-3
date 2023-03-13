@@ -8,8 +8,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
-
-import javax.persistence.EntityManager;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,7 +26,7 @@ public class Util {
     private static SessionFactory getSessionFactory() {
         if (sessionFactory == null) {
             StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-                    .loadProperties("src/main/resources/hibernate.properties").build();
+                    .loadProperties("hibernate.properties").build();
             try {
                 sessionFactory = new MetadataSources(serviceRegistry)
                         .addAnnotatedClass(User.class)
@@ -45,32 +43,28 @@ public class Util {
         return sessionFactory;
     }
 
-    public static Session getSession() throws HibernateException {
-        return getSessionFactory().openSession();
-    }
-
-    public static EntityManager getEntityManager() {
-        return getSessionFactory().createEntityManager();
+    public static Session getSession() {
+        return getSessionFactory().getCurrentSession();
     }
 
 
-    public static Connection getConnection() throws SQLException, ClassNotFoundException {
-        Properties dbProperties = new Properties();
+    public static Connection getConnection() throws SQLException {
+        Properties properties = new Properties();
 
         try (FileInputStream fis = new FileInputStream("src/main/resources/config.properties")) {
-            dbProperties.load(fis);
-            dbURL = dbProperties.getProperty("db.host");
-            dbUsername = dbProperties.getProperty("db.userName");
-            dbPassword = dbProperties.getProperty("db.password");
+            properties.load(fis);
+            dbURL = properties.getProperty("db.host");
+            dbUsername = properties.getProperty("db.userName");
+            dbPassword = properties.getProperty("db.password");
+            DriverManager.registerDriver(new com.mysql.cj.jdbc.Driver());
         } catch (FileNotFoundException e) {
-            System.out.println("File config.properties not found");
+            System.err.println("File config.properties not found");
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (SQLException  e) {
+            System.err.println("SQL driver not found");
         }
-
-        DriverManager.registerDriver(new com.mysql.cj.jdbc.Driver());
-
         return DriverManager.getConnection(dbURL, dbUsername, dbPassword);
     }
 

@@ -4,6 +4,7 @@ import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
 import java.sql.Connection;
+import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,7 +19,7 @@ public class UserDaoJDBCImpl implements UserDao {
             "last_name VARCHAR(20), \n" +
             "age INT);";
     private static final String DROP_TABLE = "DROP TABLE IF EXISTS user;";
-    private static final String INSERT_USER = "INSERT user(name, last_name, age) " +
+    private static final String INSERT_USER = "INSERT INTO user(name, last_name, age) " +
             "VALUES(?, ?, ?);";
     private static final String DELETE_USER = "DELETE FROM user WHERE id = ?;";
     private static final String CLEAR_TABLE = "TRUNCATE TABLE user";
@@ -29,30 +30,24 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void createUsersTable() {
         try (Connection connection = Util.getConnection();
-             PreparedStatement prst = connection.prepareStatement(CREATE_TABLE)) {
+             Statement statement = connection.createStatement()) {
 
-            prst.execute();
+            statement.execute(CREATE_TABLE);
 
         } catch (SQLException e) {
-            System.out.println("Исключение при создании таблицы");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.out.println("Исключение при создании таблицы");
+            System.err.println("Проблемы с соединением при создании таблицы");
             e.printStackTrace();
         }
     }
 
     public void dropUsersTable() {
         try (Connection connection = Util.getConnection();
-             PreparedStatement prst = connection.prepareStatement(DROP_TABLE)) {
+             Statement statement = connection.createStatement()) {
 
-            prst.execute();
+            statement.execute(DROP_TABLE);
 
         } catch (SQLException e) {
-            System.out.println("Исключение при удалении таблицы");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.out.println("Исключение при удалении таблицы");
+            System.err.println("Проблемы с соединением при удалении таблицы");
             e.printStackTrace();
         }
     }
@@ -69,10 +64,7 @@ public class UserDaoJDBCImpl implements UserDao {
             System.out.printf("User с именем – \s добавлен в базу данных \n", name);
 
         } catch (SQLException e) {
-            System.out.println("Исключение при добавлении данных новых пользователей в таблицу");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.out.println("Исключение при добавлении данных новых пользователей в таблицу");
+            System.err.println("Проблемы с соединением при добавлении данных новых пользователей в таблицу");
             e.printStackTrace();
         }
     }
@@ -84,10 +76,7 @@ public class UserDaoJDBCImpl implements UserDao {
             prst.executeUpdate();
 
         } catch (SQLException e) {
-            System.out.println("Исключение при удалении пользователя таблицы");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.out.println("Исключение при удалении пользователя таблицы");
+            System.err.println("Проблемы с соединением при удалении пользователя из таблицы");
             e.printStackTrace();
         }
     }
@@ -96,22 +85,20 @@ public class UserDaoJDBCImpl implements UserDao {
         List<User> users = new ArrayList<>();
 
         try (Connection connection = Util.getConnection();
-             PreparedStatement prst = connection.prepareStatement(GET_USER)) {
+             Statement statement = connection.createStatement()) {
 
-            ResultSet resultSet = prst.executeQuery();
+            ResultSet resultSet = statement.executeQuery(GET_USER);
             while(resultSet.next()) {
+                Long id = resultSet.getLong("id");
                 String name = resultSet.getString("name");
                 String lastName = resultSet.getString("last_name");
                 Byte age = resultSet.getByte("age");
 
-                users.add(new User(name, lastName, age));
+                users.add(new User(id, name, lastName, age));
 
             }
         } catch (SQLException e) {
-            System.out.println("Исключение при получении данных пользователей из таблицы");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.out.println("Исключение при получении данных пользователей из таблицы");
+            System.err.println("Проблемы с соединением при получении данных пользователей из таблицы");
             e.printStackTrace();
         }
         return users;
@@ -119,15 +106,12 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void cleanUsersTable() {
         try (Connection connection = Util.getConnection();
-             PreparedStatement prst = connection.prepareStatement(CLEAR_TABLE)) {
+             Statement statement = connection.createStatement()) {
 
-            prst.executeUpdate();
+            statement.executeUpdate(CLEAR_TABLE);
 
         } catch (SQLException e) {
-            System.out.println("Исключение при очистке таблицы");
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.out.println("Исключение при очистке таблицы");
+            System.err.println("Проблемы с соединением при очистке таблицы");
             e.printStackTrace();
         }
     }

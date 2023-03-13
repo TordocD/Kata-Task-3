@@ -2,12 +2,10 @@ package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
-import org.hibernate.HibernateError;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import javax.persistence.EntityManager;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -18,72 +16,112 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void createUsersTable() {
+        Session session = Util.getSession();
 
-        try (Session session = Util.getSession()) {
-            session.getTransaction().begin();
-            session.createSQLQuery("CREATE TABLE IF NOT EXISTS user(id, name, last_name, age);");
+        try {
+            session.beginTransaction();
+            session
+                    .createSQLQuery("CREATE TABLE IF NOT EXISTS user (" +
+                            "id INT," +
+                            " name VARCHAR(20)," +
+                            " last_name VARCHAR(20)," +
+                            " age INT);").executeUpdate();
             session.getTransaction().commit();
-        } catch (Exception e) {
-            if (Util.getSession().getTransaction().getStatus() == TransactionStatus.ACTIVE
-                    || Util.getSession().getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
-                Util.getSession().getTransaction().rollback();
+        } catch (HibernateException e) {
+            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
+                    || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
+                session.getTransaction().rollback();
             }
-            throw new HibernateException(e);
+            System.out.println("Исключение при попытке создания таблицы user");
+            e.printStackTrace();
         }
     }
 
     @Override
     public void dropUsersTable() {
         Session session = Util.getSession();
+
         try {
-            session.getTransaction().begin();
-            session.createSQLQuery("DROP TABLE IF EXISTS user;");
+            session.beginTransaction();
+            session.createSQLQuery("DROP TABLE IF EXISTS user;").executeUpdate();
             session.getTransaction().commit();
-        } catch (Exception e) {
+        } catch (HibernateException e) {
             if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
                     || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
                 session.getTransaction().rollback();
             }
-            throw new HibernateException(e);
-        } finally {
-            try {
-                session.close();
-            } catch (HibernateException e) {
-                System.out.println("Исключение при попытке закрытия сессии");
-            }
+            System.out.println("Исключение при попытке удаления таблицы user");
+            e.printStackTrace();
         }
     }
 
+
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        EntityManager entityManager = Util.getEntityManager();
-        try {
-            entityManager.getTransaction().begin();
-            entityManager.persist(new User (name, lastName, age));
-            entityManager.getTransaction().commit();
-            System.out.printf("User с именем – \s добавлен в базу данных \n", name);
-        } catch (Exception e) {
-            if (Util.getSession().getTransaction().getStatus() == TransactionStatus.ACTIVE
-                    || Util.getSession().getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
-                Util.getSession().getTransaction().rollback();
-            }
-            throw new HibernateException(e);
-        }
+        Session session = Util.getSession();
 
+        try {
+            session.beginTransaction();
+            session.persist(new User (name, lastName, age));
+            session.getTransaction().commit();
+            System.out.printf("User с именем – \s добавлен в базу данных \n", name);
+        } catch (HibernateException e) {
+            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
+                    || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
+                session.getTransaction().rollback();
+            }
+            System.out.println("Исключение при попытке добавления пользователя");
+        }
     }
 
     @Override
     public void removeUserById(long id) {
-        
+        Session session = Util.getSession();
+
+        try {
+            session.beginTransaction();
+            session.createQuery("DELETE User WHERE id = :param").executeUpdate();
+            session.getTransaction().commit();
+        } catch (HibernateException e) {
+            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
+                    || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
+                session.getTransaction().rollback();
+            }
+            System.out.println("Исключение при попытке удаления пользователя");
+        }
     }
 
     @Override
     public List<User> getAllUsers() {
-        return null;
+        List<User> users = new ArrayList<>();
+        Session session = Util.getSession();
+        try {
+            session.beginTransaction();
+            users = session.createQuery("FROM User").getResultList();
+            session.getTransaction().commit();
+        } catch (HibernateException e) {
+            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
+                    || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
+                session.getTransaction().rollback();
+            }
+            System.out.println("Исключение при попытке получения списка пользователей");
+        }
+        return users;
     }
 
     @Override
     public void cleanUsersTable() {
-
+        Session session = Util.getSession();
+        try {
+            session.beginTransaction();
+            session.createQuery("DELETE User").executeUpdate();
+            session.getTransaction().commit();
+        } catch (HibernateException e) {
+            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
+                    || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
+                session.getTransaction().rollback();
+            }
+            System.out.println("Исключение при попытке очистки таблицы пользователей");
+        }
     }
 }

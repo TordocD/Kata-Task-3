@@ -1,11 +1,12 @@
 package jm.task.core.jdbc;
 
+import jm.task.core.jdbc.service.UserService;
 import jm.task.core.jdbc.service.UserServiceImpl;
 
 public class Main {
     public static void main(String[] args) {
         //Cоздание таблицы user
-        UserServiceImpl userService = new UserServiceImpl();
+        UserService userService = new UserServiceImpl();
         userService.createUsersTable();
 
         //Добавление пользователей в user
@@ -14,8 +15,16 @@ public class Main {
         userService.saveUser("James", "Gosling", (byte)67);
         userService.saveUser("Pavel", "Durov", (byte)38);
 
+        System.out.println("\nСписок пользователей после добавления:\n");
         //Получение всех пользователей из user
         for (int i = 0; i < 4; i++) {
+            System.out.println(userService.getAllUsers().get(i).toString());
+        }
+
+        System.out.println("\nСписок пользователей после удаления пользователя с id = 2:\n");
+        userService.removeUserById(2);
+
+        for (int i = 0; i < 3; i++) {
             System.out.println(userService.getAllUsers().get(i).toString());
         }
 
@@ -26,3 +35,4 @@ public class Main {
         userService.dropUsersTable();
     }
 }
+
