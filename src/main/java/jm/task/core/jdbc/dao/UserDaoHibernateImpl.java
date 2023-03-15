@@ -73,7 +73,7 @@ public class UserDaoHibernateImpl implements UserDao {
 
         try {
             session.beginTransaction();
-            session.createQuery("DELETE User WHERE id = :id")
+            session.createQuery("DELETE FROM User WHERE id = :id")
                     .setParameter("id", id)
                     .executeUpdate();
             session.getTransaction().commit();
@@ -109,13 +109,9 @@ public class UserDaoHibernateImpl implements UserDao {
         Session session = Util.getSession();
         try {
             session.beginTransaction();
-            session.createQuery("DELETE User").executeUpdate();
+            session.createSQLQuery("TRUNCATE TABLE user").executeUpdate();
             session.getTransaction().commit();
         } catch (HibernateException e) {
-            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
-                    || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
-                session.getTransaction().rollback();
-            }
             System.out.println("Исключение при попытке очистки таблицы пользователей");
         }
     }
