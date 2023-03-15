@@ -29,10 +29,6 @@ public class UserDaoHibernateImpl implements UserDao {
                     .executeUpdate();
             session.getTransaction().commit();
         } catch (HibernateException e) {
-            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
-                    || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
-                session.getTransaction().rollback();
-            }
             System.out.println("Исключение при попытке создания таблицы user");
             e.printStackTrace();
         }
@@ -47,10 +43,6 @@ public class UserDaoHibernateImpl implements UserDao {
             session.createSQLQuery("DROP TABLE IF EXISTS user;").executeUpdate();
             session.getTransaction().commit();
         } catch (HibernateException e) {
-            if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
-                    || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
-                session.getTransaction().rollback();
-            }
             System.out.println("Исключение при попытке удаления таблицы user");
             e.printStackTrace();
         }
